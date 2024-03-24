@@ -1,10 +1,25 @@
 "use client"; // This is a client component
 
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Loader } from "@googlemaps/js-api-loader";
 
-function Map(latlng: LatLng) {
+type LatLng = {
+  lat: number;
+  lng: number;
+};
+
+function Map() {
   const mapRef = React.useRef<HTMLDivElement>(null);
+  //   const markerRef = React.useRef<google.maps.MarkerLibrary | null>(null); // Track marker
+
+  const defaultLatLng: LatLng = {
+    lat: 1.29027,
+    lng: 103.851959,
+  };
+
+  const [latlng, setLatlng] = useState<LatLng>(defaultLatLng);
+  const [markerPosition, setMarkerPosition] = useState<LatLng>(defaultLatLng);
+
   useEffect(() => {
     const initMap = async () => {
       console.log("map init");
@@ -16,18 +31,13 @@ function Map(latlng: LatLng) {
       const { Map } = await loader.importLibrary("maps");
 
       // init a marker
-      const { Marker } = (await loader.importLibrary(
+      const { AdvancedMarkerElement } = (await loader.importLibrary(
         "marker"
       )) as google.maps.MarkerLibrary;
 
-      const position = {
-        lat: 1.29027,
-        lng: 103.851959,
-      };
-
       // map options
       const mapOptions: google.maps.MapOptions = {
-        center: position,
+        center: defaultLatLng,
         zoom: 17,
         mapId: "MY_NEXTJS_MAPID",
       };
@@ -36,13 +46,36 @@ function Map(latlng: LatLng) {
       const map = new Map(mapRef.current as HTMLDivElement, mapOptions);
 
       // put up a marker
-      const marker = new Marker({
+      const marker = new AdvancedMarkerElement({
         map: map,
-        position: position,
+        position: markerPosition,
+      });
+
+      // Add center_change event listener to move to marker location
+      map.addListener("center_changed", () => {
+        // 3 seconds after the center of the map has changed, pan back to the
+        // marker.
+        console.log("panning");
+        window.setTimeout(() => {
+          map.panTo(marker.position as google.maps.LatLng);
+        }, 3000);
+      });
+
+      // Add click event listener to move marker to clicked position
+      map.addListener("click", (e: google.maps.MapMouseEvent) => {
+        // 3 seconds after the center of the map has changed, pan back to the
+        // marker.
+        console.log("clicked");
+        if (e.latLng) {
+          const { lat, lng } = e.latLng;
+          console.log(lat());
+          // 2.4
+          setMarkerPosition({ lat: lat(), lng: lng() });
+        }
       });
     };
     initMap();
-  }, []);
+  }, [markerPosition]);
 
   return (
     <div>
