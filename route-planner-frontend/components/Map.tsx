@@ -2,15 +2,27 @@
 
 import React, { useState, useEffect } from "react";
 import { Loader } from "@googlemaps/js-api-loader";
+import { fetchNearbyPlaces } from "@/app/api/api";
 
 type LatLng = {
   lat: number;
   lng: number;
 };
 
+type DisplayName = {
+  text: string;
+  languageCode: string;
+};
+
+type Place = {
+  displayName: DisplayName;
+  rating: number;
+  primaryType: string;
+  // Add other fields as needed
+};
+
 function Map() {
   const mapRef = React.useRef<HTMLDivElement>(null);
-  //   const markerRef = React.useRef<google.maps.MarkerLibrary | null>(null); // Track marker
 
   const defaultLatLng: LatLng = {
     lat: 1.29027,
@@ -19,6 +31,7 @@ function Map() {
 
   const [latlng, setLatlng] = useState<LatLng>(defaultLatLng);
   const [markerPosition, setMarkerPosition] = useState<LatLng>(defaultLatLng);
+  const [nearbyPlaces, setNearbyPlaces] = useState<Place[]>([]);
 
   useEffect(() => {
     const initMap = async () => {
@@ -37,7 +50,7 @@ function Map() {
 
       // map options
       const mapOptions: google.maps.MapOptions = {
-        center: defaultLatLng,
+        center: latlng,
         zoom: 17,
         mapId: "MY_NEXTJS_MAPID",
       };
@@ -52,25 +65,31 @@ function Map() {
       });
 
       // Add center_change event listener to move to marker location
-      map.addListener("center_changed", () => {
-        // 3 seconds after the center of the map has changed, pan back to the
-        // marker.
-        console.log("panning");
-        window.setTimeout(() => {
-          map.panTo(marker.position as google.maps.LatLng);
-        }, 3000);
-      });
+      //   map.addListener("center_changed", () => {
+      //     // 3 seconds after the center of the map has changed, pan back to the
+      //     // marker.
+      //     console.log("panning");
+      //     window.setTimeout(() => {
+      //       map.panTo(marker.position as google.maps.LatLng);
+      //     }, 3000);
+      //   });
 
       // Add click event listener to move marker to clicked position
-      map.addListener("click", (e: google.maps.MapMouseEvent) => {
-        // 3 seconds after the center of the map has changed, pan back to the
-        // marker.
+      map.addListener("click", async (e: google.maps.MapMouseEvent) => {
         console.log("clicked");
         if (e.latLng) {
           const { lat, lng } = e.latLng;
-          console.log(lat());
-          // 2.4
+          setLatlng({ lat: lat(), lng: lng() });
           setMarkerPosition({ lat: lat(), lng: lng() });
+
+          try {
+            const placesResponse = await fetchNearbyPlaces(lat(), lng());
+            const places = placesResponse.places; // Assuming places is an object with a 'places' array
+            console.log(`PLACES = ${places}`);
+            setNearbyPlaces(places); // Set the 'places' array to the state
+          } catch (error) {
+            console.error("Error fetching nearby places:", error);
+          }
         }
       });
     };
@@ -81,6 +100,27 @@ function Map() {
     <div>
       <h1> Google Maps</h1>
       <div style={{ height: "600px" }} ref={mapRef} />
+      <h2>Nearby Places</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Display Name</th>
+            <th>Rating</th>
+            <th>Type</th>
+            {/* Add other columns as needed */}
+          </tr>
+        </thead>
+        <tbody>
+          {nearbyPlaces.map((place, index) => (
+            <tr key={index}>
+              <td>{place.displayName.text}</td>
+              <td>{place.rating}</td>
+              <td>{place.primaryType}</td>
+              {/* Add other table cells for additional fields */}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
