@@ -1,6 +1,7 @@
 "use client"; // This is a client component
 
 import Map from "@/components/Map";
+import NearbyPlacesTable from "@/components/NearbyPlacesTable";
 import React, { useState } from "react";
 
 interface FormData {
@@ -8,11 +9,28 @@ interface FormData {
   duration: number;
 }
 
+type DisplayName = {
+  text: string;
+  languageCode: string;
+};
+
+type Place = {
+  displayName: DisplayName;
+  rating: number;
+  primaryType: string;
+  // Add other fields as needed
+};
+
 export default function Home() {
   const [formData, setFormData] = useState<FormData>({
     startLocation: "",
     duration: 0,
   });
+  const [places, setPlaces] = useState<Place[]>([]);
+
+  const handleUpdatePlaces = (newPlaces: Place[]) => {
+    setPlaces(newPlaces);
+  };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -53,7 +71,10 @@ export default function Home() {
           min={0}
           required
         />
-        <Map />
+        <Map onUpdatePlaces={handleUpdatePlaces} />
+        {/* Render your places data here */}
+        <NearbyPlacesTable places={places} />
+
         <button type="submit">Plan Trip</button>
       </form>
     </div>

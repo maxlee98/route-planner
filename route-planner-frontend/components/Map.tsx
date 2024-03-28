@@ -21,7 +21,11 @@ type Place = {
   // Add other fields as needed
 };
 
-function Map() {
+type MapProps = {
+  onUpdatePlaces: (places: Place[]) => void;
+};
+
+function Map({ onUpdatePlaces }: MapProps) {
   const mapRef = React.useRef<HTMLDivElement>(null);
 
   const defaultLatLng: LatLng = {
@@ -31,7 +35,6 @@ function Map() {
 
   const [latlng, setLatlng] = useState<LatLng>(defaultLatLng);
   const [markerPosition, setMarkerPosition] = useState<LatLng>(defaultLatLng);
-  const [nearbyPlaces, setNearbyPlaces] = useState<Place[]>([]);
 
   useEffect(() => {
     const initMap = async () => {
@@ -86,7 +89,7 @@ function Map() {
             const placesResponse = await fetchNearbyPlaces(lat(), lng());
             const places = placesResponse.places; // Assuming places is an object with a 'places' array
             console.log(`PLACES = ${places}`);
-            setNearbyPlaces(places); // Set the 'places' array to the state
+            onUpdatePlaces(places);
           } catch (error) {
             console.error("Error fetching nearby places:", error);
           }
@@ -100,27 +103,6 @@ function Map() {
     <div>
       <h1> Google Maps</h1>
       <div style={{ height: "600px" }} ref={mapRef} />
-      <h2>Nearby Places</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Display Name</th>
-            <th>Rating</th>
-            <th>Type</th>
-            {/* Add other columns as needed */}
-          </tr>
-        </thead>
-        <tbody>
-          {nearbyPlaces.map((place, index) => (
-            <tr key={index}>
-              <td>{place.displayName.text}</td>
-              <td>{place.rating}</td>
-              <td>{place.primaryType}</td>
-              {/* Add other table cells for additional fields */}
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }
