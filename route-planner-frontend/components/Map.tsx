@@ -23,9 +23,10 @@ type Place = {
 
 type MapProps = {
   onUpdatePlaces: (places: Place[]) => void;
+  selectedTypes: string[]; // Add selectedTypes as a prop
 };
 
-function Map({ onUpdatePlaces }: MapProps) {
+function Map({ onUpdatePlaces, selectedTypes }: MapProps) {
   const mapRef = React.useRef<HTMLDivElement>(null);
 
   const defaultLatLng: LatLng = {
@@ -39,7 +40,7 @@ function Map({ onUpdatePlaces }: MapProps) {
 
   useEffect(() => {
     const initMap = async () => {
-      console.log("map init");
+      // console.log("map init");
       const loader = new Loader({
         apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
         version: "weekly",
@@ -88,16 +89,20 @@ function Map({ onUpdatePlaces }: MapProps) {
 
       // Add click event listener to move marker to clicked position
       map.addListener("click", async (e: google.maps.MapMouseEvent) => {
-        console.log("clicked");
+        // console.log("clicked");
         if (e.latLng) {
           const { lat, lng } = e.latLng;
           setLatlng({ lat: lat(), lng: lng() });
           setMarkerPosition({ lat: lat(), lng: lng() });
 
           try {
-            const placesResponse = await fetchNearbyPlaces(lat(), lng());
+            const placesResponse = await fetchNearbyPlaces(
+              lat(),
+              lng(),
+              selectedTypes
+            );
             const places = placesResponse.places; // Assuming places is an object with a 'places' array
-            console.log(`PLACES = ${places}`);
+            // console.log(`PLACES = ${places}`);
             onUpdatePlaces(places);
           } catch (error) {
             console.error("Error fetching nearby places:", error);
@@ -111,6 +116,9 @@ function Map({ onUpdatePlaces }: MapProps) {
   return (
     <div>
       <h1> Google Maps</h1>
+      <div>
+        Click on anywhere on the map to show the 20 closest filtered places!
+      </div>
       <div style={{ height: "600px" }} ref={mapRef} />
     </div>
   );

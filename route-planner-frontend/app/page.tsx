@@ -2,6 +2,7 @@
 
 import Map from "@/components/Map";
 import NearbyPlacesTable from "@/components/NearbyPlacesTable";
+import PlaceTypeSelector from "@/components/PlaceTypeSelector";
 import React, { useState } from "react";
 
 interface FormData {
@@ -27,6 +28,11 @@ export default function Home() {
     duration: 0,
   });
   const [places, setPlaces] = useState<Place[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+
+  const handleSelectedTypesChange = (types: string[]) => {
+    setSelectedTypes(types);
+  };
 
   const handleUpdatePlaces = (newPlaces: Place[]) => {
     setPlaces(newPlaces);
@@ -71,7 +77,12 @@ export default function Home() {
           min={0}
           required
         />
-        <Map onUpdatePlaces={handleUpdatePlaces} />
+        {/* Include PlaceTypeSelector here */}
+        <PlaceTypeSelector onSelectedTypesChange={handleSelectedTypesChange} />
+        <Map
+          onUpdatePlaces={handleUpdatePlaces}
+          selectedTypes={selectedTypes}
+        />
         {/* Render your places data here */}
         <NearbyPlacesTable places={places} />
 
