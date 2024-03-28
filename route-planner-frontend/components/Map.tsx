@@ -35,6 +35,7 @@ function Map({ onUpdatePlaces }: MapProps) {
 
   const [latlng, setLatlng] = useState<LatLng>(defaultLatLng);
   const [markerPosition, setMarkerPosition] = useState<LatLng>(defaultLatLng);
+  const [zoomLevel, setZoomLevel] = useState<number>(17);
 
   useEffect(() => {
     const initMap = async () => {
@@ -54,7 +55,7 @@ function Map({ onUpdatePlaces }: MapProps) {
       // map options
       const mapOptions: google.maps.MapOptions = {
         center: latlng,
-        zoom: 17,
+        zoom: zoomLevel,
         mapId: "MY_NEXTJS_MAPID",
       };
 
@@ -65,6 +66,14 @@ function Map({ onUpdatePlaces }: MapProps) {
       const marker = new AdvancedMarkerElement({
         map: map,
         position: markerPosition,
+      });
+
+      map.addListener("zoom_changed", () => {
+        if (mapRef.current) {
+          // console.log(`Set Zoom Level: ${zoomLevel}`);
+          // console.log(`Map Zoom Level: ${map.getZoom()}`);
+          setZoomLevel(map.getZoom() || 0);
+        }
       });
 
       // Add center_change event listener to move to marker location
